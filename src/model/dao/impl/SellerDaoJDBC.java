@@ -16,7 +16,7 @@ public class SellerDaoJDBC implements SellerDao {
 
     private Connection connection;
 
-    public SellerDaoJDBC(Connection connection){
+    public SellerDaoJDBC(Connection connection) {
         this.connection = connection;
     }
 
@@ -39,6 +39,7 @@ public class SellerDaoJDBC implements SellerDao {
     public Seller findById(Integer id) {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
+
         try {
             preparedStatement = connection.prepareStatement(
                     "SELECT seller.*,department.Name as DepName " +
@@ -46,31 +47,18 @@ public class SellerDaoJDBC implements SellerDao {
                             "ON seller.DepartmentId = department.Id " +
                             "WHERE seller.Id = ?"
             );
-
             preparedStatement.setInt(1, id);
             resultSet = preparedStatement.executeQuery();
+
             if (resultSet.next()) {
-
-                Department dep = new Department();
-                dep.setId(resultSet.getInt("DepartmentId"));
-                dep.setName(resultSet.getString("DepName"));
-
-                Seller seller = new Seller();
-                seller.setId(resultSet.getInt("Id"));
-                seller.setName(resultSet.getString("Name"));
-                seller.setEmail(resultSet.getString("Email"));
-                seller.setBaseSalary(resultSet.getDouble("BaseSalary"));
-                seller.setBirthDate(resultSet.getDate("BirthDate"));
-                seller.setDepartment(dep);
-
+                Department dep = instantiateDepartment(resultSet);
+                Seller seller = instantiateSeller(resultSet, dep);
                 return seller;
             }
             return null;
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             throw new DbException(e.getMessage());
-        }
-        finally {
+        } finally {
             DB.closeStatement(preparedStatement);
             DB.closeResultSet(resultSet);
         }
@@ -80,4 +68,23 @@ public class SellerDaoJDBC implements SellerDao {
     public List<Seller> findAll() {
         return List.of();
     }
+
+    private Department instantiateDepartment(ResultSet resultSet) throws SQLException {
+        Department dep = new Department();
+        dep.setId(resultSet.getInt("DepartmentId"));
+        dep.setName(resultSet.getString("DepName"));
+        return dep;
+    }
+
+    private Seller instantiateSeller(ResultSet resultSet, Department dep) throws SQLException {
+        Seller seller = new Seller();
+        seller.setId(resultSet.getInt("Id"));
+        seller.setName(resultSet.getString("Name"));
+        seller.setEmail(resultSet.getString("Email"));
+        seller.setBaseSalary(resultSet.getDouble("BaseSalary"));
+        seller.setBirthDate(resultSet.getDate("BirthDate"));
+        seller.setDepartment(dep);
+        return seller;
+    }
+
 }
