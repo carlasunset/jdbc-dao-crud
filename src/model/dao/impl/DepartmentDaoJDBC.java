@@ -1,5 +1,6 @@
 package model.dao.impl;
 
+import db.DB;
 import db.DbException;
 import model.dao.DepartmentDao;
 import model.entities.Department;
@@ -49,8 +50,13 @@ public class DepartmentDaoJDBC implements DepartmentDao {
             }
             return null;
 
-        } catch (SQLException e) {
+        }
+        catch (SQLException e) {
             throw new DbException(e.getMessage());
+        }
+        finally {
+            DB.closeStatement(preparedStatement);
+            DB.closeResultSet(resultSet);
         }
     }
 
